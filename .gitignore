@@ -24,4 +24,5 @@ build/
 **/packages
 **/lib
 **/PublishProfiles
+**/node_modules
 *.min.*
