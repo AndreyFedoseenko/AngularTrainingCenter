@@ -95,5 +95,7 @@ namespace AngularTrainingCenterApi.Migrations
             DropTable("dbo.AspNetUserRoles");
             DropTable("dbo.AspNetRoles");
         }
+
+
     }
 }

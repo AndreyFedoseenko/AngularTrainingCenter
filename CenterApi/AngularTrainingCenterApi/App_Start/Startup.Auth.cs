@@ -11,6 +11,8 @@ using Owin;
 using AngularTrainingCenterApi.Providers;
 using AngularTrainingCenterApi.Models;
 using AngularTrainingCenterApi.Context;
+using Microsoft.Owin.Cors;
+using System.Data.Entity;
 
 namespace AngularTrainingCenterApi
 {

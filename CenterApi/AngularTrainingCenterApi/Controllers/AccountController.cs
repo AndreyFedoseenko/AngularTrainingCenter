@@ -16,11 +16,12 @@ using Microsoft.Owin.Security.OAuth;
 using AngularTrainingCenterApi.Models;
 using AngularTrainingCenterApi.Providers;
 using AngularTrainingCenterApi.Results;
+using System.Web.Http.Cors;
 
 namespace AngularTrainingCenterApi.Controllers
 {
-    [Authorize]
     [RoutePrefix("api/Account")]
+    [Authorize]
     public class AccountController : ApiController
     {
         private const string LocalLoginProvider = "Local";
@@ -199,6 +200,87 @@ namespace AngularTrainingCenterApi.Controllers
             {
                 return GetErrorResult(result);
             }
+
+            return Ok();
+        }
+
+        [OverrideAuthentication]
+        [HostAuthentication(DefaultAuthenticationTypes.ExternalCookie)]
+        [AllowAnonymous]
+        [Route("ExternalLogin", Name = "ExternalLogin")]
+        public async Task<IHttpActionResult> GetExternalLogin(string provider, string error = null)
+        {
+            if (error != null)
+            {
+                return this.Redirect(this.Url.Content("~/") + "#error=" + Uri.EscapeDataString(error));
+            }
+
+            if (!this.User.Identity.IsAuthenticated)
+            {
+                return new ChallengeResult(provider, this);
+            }
+
+            ExternalLoginData externalLogin = ExternalLoginData.FromIdentity(this.User.Identity as ClaimsIdentity);
+
+            if (externalLogin == null)
+            {
+                return this.InternalServerError();
+            }
+
+            if (externalLogin.LoginProvider != provider)
+            {
+                this.Authentication.SignOut(DefaultAuthenticationTypes.ExternalCookie);
+                return new ChallengeResult(provider, this);
+            }
+
+            ApplicationUser user = await this.UserManager.FindAsync(new UserLoginInfo(externalLogin.LoginProvider,
+                externalLogin.ProviderKey));
+
+            bool hasRegistered = user != null;
+
+            if (hasRegistered)
+            {
+                this.Authentication.SignOut(DefaultAuthenticationTypes.ExternalCookie);
+
+                ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(this.UserManager,
+                   OAuthDefaults.AuthenticationType);
+                ClaimsIdentity cookieIdentity = await user.GenerateUserIdentityAsync(this.UserManager,
+                    CookieAuthenticationDefaults.AuthenticationType);
+
+                AuthenticationProperties properties = ApplicationOAuthProvider.CreateProperties(user.UserName);
+                this.Authentication.SignIn(properties, oAuthIdentity, cookieIdentity);
+            }
+            else
+            {
+                IEnumerable<Claim> claims = externalLogin.GetClaims();
+                ClaimsIdentity identity = new ClaimsIdentity(claims, OAuthDefaults.AuthenticationType);
+                this.Authentication.SignIn(identity);
+            }
+
+            return this.Ok();
+        }
+
+        // POST api/Account/Login
+        [AllowAnonymous]
+        [Route("Login")]
+        public async Task<IHttpActionResult> Login(LoginModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindAsync(model.Username, model.Password);
+
+            var identity = await UserManager.CreateIdentityAsync(
+               user, DefaultAuthenticationTypes.ApplicationCookie);
+
+            Authentication.SignIn(
+               new AuthenticationProperties()
+               {
+                   IsPersistent = true
+               }, identity);
+
 
             return Ok();
         }

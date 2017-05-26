@@ -1,5 +1,4 @@
-﻿using AngularTrainingCenterApi.Seeder;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -19,6 +18,19 @@ namespace AngularTrainingCenterApi
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
+        }
+
+        protected void Application_EndRequest()
+        {
+            if (Request.Headers.AllKeys.Contains("Origin") && Request.HttpMethod == "OPTIONS" && Response.StatusCode == 405)
+            {
+                //string vlsOrigin = Request.Headers["ORIGIN"];
+                //Response.AddHeader("Access-Control-Allow-Origin", vlsOrigin);
+                //Response.AddHeader("Access-Control-Allow-Methods", "POST");
+                //Response.AddHeader("Access-Control-Allow-Headers", "accept, content-type");
+                //Response.AddHeader("Access-Control-Max-Age", "1728000");
+                Response.StatusCode = 200;
+            }
         }
     }
 }

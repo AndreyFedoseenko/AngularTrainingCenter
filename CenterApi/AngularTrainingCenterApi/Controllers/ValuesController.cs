@@ -7,13 +7,13 @@ using System.Web.Http;
 
 namespace AngularTrainingCenterApi.Controllers
 {
-    [Authorize]
     public class ValuesController : ApiController
     {
         // GET api/values
-        public IEnumerable<string> Get()
+        public IHttpActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            var result = new string[] { "value1", "value2" };
+            return Ok(result);
         }
 
         // GET api/values/5
