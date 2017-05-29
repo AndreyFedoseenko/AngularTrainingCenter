@@ -13,7 +13,7 @@ namespace AngularTrainingCenterApi.Models
         public string ExternalAccessToken { get; set; }
     }
 
-    public class ChangePasswordBindingModel
+    public class ChangePasswordModel
     {
         [Required]
         [DataType(DataType.Password)]

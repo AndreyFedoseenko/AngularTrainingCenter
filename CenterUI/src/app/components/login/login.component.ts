@@ -3,52 +3,38 @@ import { LoginModel } from '../../models/login-model';
 import { LoginService } from './login.service';
 import { OnInit } from '@angular/core';
 import {Router} from "@angular/router";
+import { AppComponent }   from '../app/app.component';
+import { DataService} from '../../services/data.service';
 
 import "bootstrap/dist/css/bootstrap.css";
 
 @Component({
 	selector: 'trainer-login',
-	template: `
-    <div class="row">
-        <div class="col-md-4"></div>
-        <div class="col-md-4">
-            <div class="login-form">
-            <h4>{{title}}</h4>
-            <div><label>Please, enter your login!</label></div>
-            <div class="input-group"><input class="form-control login-input" [(ngModel)]="userCreds.Username" plaseholder="login"/></div>
-            <div><label>Please, enter your password!</label></div>
-            <div class="input-group"><input class="form-control login-input" type="password" [(ngModel)]="userCreds.Password" plaseholder="password"/></div>
-            <div class="login-btn"> <a class="btn btn-primary" (click)="submitCreds()">Submit</a></div>
-            </div>
-       </div>
-    </div>
-  `,
-    styles:[`
-        .login-input {
-            border-radius: 5px !important;
-        }
-        .login-btn{
-            margin-top:5px;
-            text-align:center;
-        }
-        .login-form{
-            display: inline-block;
-        }
-    `],
-    providers: [LoginService]
+	templateUrl: './login.component.view.html',
+    styleUrls: [ './login.component.styles.css' ],
+    providers: [LoginService, DataService]
 })
 export class LoginComponent implements OnInit { 
     constructor(private loginService: LoginService,
                 private rout: Router) {
      }
 	title = 'Enter credentials!';
+    errorList = '';
     userCreds: LoginModel;
     ngOnInit(): void {
+        this.userCreds = {
+            Username : "",
+            Password : ""
+        };
     }
     submitCreds(): void{
-        this.loginService.sendCreds(this.userCreds).then(resp => {
-            let z = resp.json();
-            this.rout.navigate(['/']);
-        });
+        this.loginService.sendCreds(this.userCreds)
+        .then(resp => {
+            var respones = resp as any;
+            let bodyRequest = JSON.parse(respones._body);
+            AppComponent.SetLogined(bodyRequest.access_token);
+            this.rout.navigate(['/intro']);
+        })
+        .catch(error => this.errorList = error);
     }   
 }

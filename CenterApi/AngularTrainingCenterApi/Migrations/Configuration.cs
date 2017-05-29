@@ -31,7 +31,7 @@ namespace AngularTrainingCenterApi.Migrations
 
                 var userStore = new UserStore<ApplicationUser>(context);
                 var userManager = new UserManager<ApplicationUser>(userStore);
-                var user = new ApplicationUser { UserName = "fed.andrey@nixsolutions.com" };
+                var user = new ApplicationUser { UserName = "fed.andrey@nixsolutions.com", Email= "fed.andrey@nixsolutions.com", EmailConfirmed = true };
 
                 userManager.Create(user, "Azya1111");
                 userManager.AddToRole(user.Id, "owner");

@@ -17,6 +17,8 @@ using AngularTrainingCenterApi.Models;
 using AngularTrainingCenterApi.Providers;
 using AngularTrainingCenterApi.Results;
 using System.Web.Http.Cors;
+using System.Net.Mail;
+using System.Diagnostics;
 
 namespace AngularTrainingCenterApi.Controllers
 {
@@ -116,7 +118,7 @@ namespace AngularTrainingCenterApi.Controllers
 
         // POST api/Account/ChangePassword
         [Route("ChangePassword")]
-        public async Task<IHttpActionResult> ChangePassword(ChangePasswordBindingModel model)
+        public async Task<IHttpActionResult> ChangePassword(ChangePasswordModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -132,6 +134,83 @@ namespace AngularTrainingCenterApi.Controllers
             }
 
             return Ok();
+        }
+
+        // POST api/Account/ForgotPassword
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("ForgotPassword")]
+        public async Task<IHttpActionResult> ForgotPassword(ForgotPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await UserManager.FindByNameAsync(model.Email);
+            if (user == null)
+            {
+                return BadRequest("Please, enter correct email!");
+            }
+
+            var code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
+
+            this.SendEmail(model.Email, code);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IHttpActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var user = await UserManager.FindByNameAsync(model.Email);
+            if (user == null)
+            {
+                return BadRequest("Please, enter correct email!");
+            }
+            var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.NewPassword);
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+            return BadRequest("Please, enter correct email!");
+        }
+
+        private void SendEmail(string email, string code)
+        {
+            SmtpClient client = new SmtpClient();
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.EnableSsl = true;
+            client.Host = "smtp.gmail.com";
+            client.Port = 587;
+
+            // setup Smtp authentication
+            System.Net.NetworkCredential credentials =
+                new System.Net.NetworkCredential("azenkur.1992.osipovich@gmail.com", "7!Azya11");
+            client.UseDefaultCredentials = false;
+            client.Credentials = credentials;
+
+            MailMessage msg = new MailMessage();
+            msg.From = new MailAddress("azenkur.1992.osipovich@gmail.com");
+            msg.To.Add(new MailAddress(email));
+
+            msg.Subject = "Password reset";
+            msg.IsBodyHtml = true;
+            msg.Body = string.Format("<html><head></head><body>Please, copy this code to Reset Password Code field: <b>{0}</b></body>", code);
+
+            try
+            {
+                client.Send(msg);
+            }
+            catch (Exception ex)
+            {
+                Debugger.Break();
+            }
         }
 
         // POST api/Account/SetPassword

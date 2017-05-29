@@ -1,0 +1,13 @@
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <nav>
+                 <a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/login']">Login</a>
+                 <a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/forgotPassword']">Forgot Password</a>
+                 <a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/resetPassword']">Reset Password</a>
+                 <a class="btn btn-primary" *ngIf="isUserLogined()" class="mdl-navigation__link" [routerLink]="['/changePassword']">ChangePassword</a>
+            </nav>
+       </div>
+    </div>
+    <router-outlet></router-outlet>
