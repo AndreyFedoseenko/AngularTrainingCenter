@@ -6,8 +6,6 @@ import { ResetPasswordService } from './reset-password.service';
 import { DataService} from '../../services/data.service';
 import { AppComponent }   from '../app/app.component';
 
-import "bootstrap/dist/css/bootstrap.css";
-
 @Component({
 	selector: 'trainer-reset-password',
 	templateUrl: './reset-password.component.view.html',

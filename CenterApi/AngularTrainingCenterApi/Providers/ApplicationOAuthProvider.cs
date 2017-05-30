@@ -31,6 +31,8 @@ namespace AngularTrainingCenterApi.Providers
         {
             var userManager = context.OwinContext.GetUserManager<ApplicationUserManager>();
 
+            var roleManager = context.OwinContext.Get<RoleManager<IdentityRole>>();
+
             ApplicationUser user = await userManager.FindAsync(context.UserName, context.Password);
 
             if (user == null)
@@ -39,12 +41,20 @@ namespace AngularTrainingCenterApi.Providers
                 return;
             }
 
+            if (user.LockoutEnabled)
+            {
+                context.SetError("invalid_grant", "You have been blocked.Please connect with our admin.");
+                return;
+            }
+
             ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(userManager,
                OAuthDefaults.AuthenticationType);
             ClaimsIdentity cookiesIdentity = await user.GenerateUserIdentityAsync(userManager,
                 CookieAuthenticationDefaults.AuthenticationType);
 
-            AuthenticationProperties properties = CreateProperties(user.UserName);
+            var roleName = this.GetRoleName(user, roleManager);
+
+            AuthenticationProperties properties = CreateProperties(user.UserName, roleName);
             AuthenticationTicket ticket = new AuthenticationTicket(oAuthIdentity, properties);
             context.Validated(ticket);
             context.Request.Context.Authentication.SignIn(cookiesIdentity);
@@ -93,6 +103,30 @@ namespace AngularTrainingCenterApi.Providers
                 { "userName", userName }
             };
             return new AuthenticationProperties(data);
+        }
+
+        public static AuthenticationProperties CreateProperties(string userName, string roleName)
+        {
+            IDictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "userName", userName }
+            };
+            if(!string.IsNullOrEmpty(roleName))
+            {
+                data["roleName"] = roleName;
+            }
+            return new AuthenticationProperties(data);
+        }
+
+        private string GetRoleName(ApplicationUser user, RoleManager<IdentityRole> roleManager)
+        {
+            var identittyRole = user.Roles.FirstOrDefault();
+            if(identittyRole != null)
+            {
+                var role = roleManager.FindById(identittyRole.RoleId);
+                return (role != null) ? role.Name : string.Empty;
+            }
+            return string.Empty;
         }
     }
 }

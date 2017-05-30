@@ -13,6 +13,7 @@ using AngularTrainingCenterApi.Models;
 using AngularTrainingCenterApi.Context;
 using Microsoft.Owin.Cors;
 using System.Data.Entity;
+using Microsoft.AspNet.Identity.Owin;
 
 namespace AngularTrainingCenterApi
 {
@@ -29,6 +30,8 @@ namespace AngularTrainingCenterApi
             app.CreatePerOwinContext(TrainingCenterContext.Create);
             app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
 
+            app.CreatePerOwinContext<RoleManager<IdentityRole>>(CreateRolesManager);
+
             // Enable the application to use a cookie to store information for the signed in user
             // and to use a cookie to temporarily store information about a user logging in with a third party login provider
             app.UseCookieAuthentication(new CookieAuthenticationOptions());
@@ -38,6 +41,7 @@ namespace AngularTrainingCenterApi
             PublicClientId = "self";
             OAuthOptions = new OAuthAuthorizationServerOptions
             {
+                
                 TokenEndpointPath = new PathString("/Token"),
                 Provider = new ApplicationOAuthProvider(PublicClientId),
                 AuthorizeEndpointPath = new PathString("/api/Account/ExternalLogin"),
@@ -67,6 +71,11 @@ namespace AngularTrainingCenterApi
             //    ClientId = "",
             //    ClientSecret = ""
             //});
+        }
+
+        private static RoleManager<IdentityRole> CreateRolesManager(IdentityFactoryOptions<RoleManager<IdentityRole>> options, IOwinContext context)
+        {
+            return new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context.Get<TrainingCenterContext>()));
         }
     }
 }

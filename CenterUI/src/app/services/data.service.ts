@@ -14,7 +14,11 @@ export class DataService {
     get(readUrl: string, token: string): Promise<Response> {
             //let stringForRequest = this.parsing.parsingEventObject(dataHandler);
         let headers = new Headers();
-            return this.http.get(readUrl, { headers: headers })
+        if(token != ""){
+            headers.append('Authorization', 'Bearer ' + token);
+        }
+        
+        return this.http.get(readUrl, { headers: headers })
                 .toPromise()
                 .catch(this.handleError);
     };

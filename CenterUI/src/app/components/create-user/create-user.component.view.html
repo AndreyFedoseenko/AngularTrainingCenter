@@ -1,0 +1,20 @@
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <h2>{{title}}</h2>
+            <div class="login-form">
+                <div><label>Please, enter user email!</label></div>
+                <div class="input-group"><input class="form-control login-input" [(ngModel)]="model.Username" plaseholder="login"/></div>
+                <div><label>Please, choose user role!</label></div>
+                <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select role
+                        <span class="caret"></span></button>
+                        <ul class="dropdown-menu">
+                            <li *ngFor="let role of roles" (click)="selectRole(role)"><a>{{role}}</a></li>
+                        </ul>
+                </div>
+                <div class="login-btn"> <a class="btn btn-primary" (click)="createUser()">Create</a></div>
+			    <span style="color:red">{{errorList}}</span>
+            </div>
+       </div>
+    </div>

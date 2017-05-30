@@ -6,8 +6,6 @@ import { ForgotPasswordService } from './forgot-password.service';
 import { DataService} from '../../services/data.service';
 import { AppComponent }   from '../app/app.component';
 
-import "bootstrap/dist/css/bootstrap.css";
-
 @Component({
 	selector: 'trainer-forgot-password',
 	templateUrl: './forgot-password.component.view.html',

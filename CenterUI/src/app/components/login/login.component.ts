@@ -1,12 +1,10 @@
 import { Component } from '@angular/core';
-import { LoginModel } from '../../models/login-model';
+import { UserModel } from '../../models/user-model';
 import { LoginService } from './login.service';
 import { OnInit } from '@angular/core';
 import {Router} from "@angular/router";
 import { AppComponent }   from '../app/app.component';
 import { DataService} from '../../services/data.service';
-
-import "bootstrap/dist/css/bootstrap.css";
 
 @Component({
 	selector: 'trainer-login',
@@ -20,7 +18,7 @@ export class LoginComponent implements OnInit {
      }
 	title = 'Enter credentials!';
     errorList = '';
-    userCreds: LoginModel;
+    userCreds: UserModel;
     ngOnInit(): void {
         this.userCreds = {
             Username : "",
@@ -32,9 +30,13 @@ export class LoginComponent implements OnInit {
         .then(resp => {
             var respones = resp as any;
             let bodyRequest = JSON.parse(respones._body);
-            AppComponent.SetLogined(bodyRequest.access_token);
+            AppComponent.SetLogined(bodyRequest.access_token,bodyRequest.roleName);
             this.rout.navigate(['/intro']);
         })
-        .catch(error => this.errorList = error);
+        .catch(error => {
+            var respones = error as any;
+            let bodyRequest = JSON.parse(respones._body);
+            this.errorList = bodyRequest.error_description;
+         });
     }   
 }

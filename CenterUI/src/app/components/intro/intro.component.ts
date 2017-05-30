@@ -3,8 +3,6 @@ import { OnInit } from '@angular/core';
 import {Router} from "@angular/router";
 import { AppComponent }   from '../app/app.component';
 
-import "bootstrap/dist/css/bootstrap.css";
-
 @Component({
 	selector: 'training-intro',
 	templateUrl: './intro.component.view.html'

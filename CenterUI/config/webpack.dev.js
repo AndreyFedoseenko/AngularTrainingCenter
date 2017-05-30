@@ -8,7 +8,7 @@ module.exports = webpackMerge(commonConfig, {
 
     output: {
         path: helpers.root('../CenterApi/AngularTrainingCenterApi/buildUI'),
-        publicPath: 'build',
+        publicPath: 'buildUI/',
         filename: '[name].js',
         chunkFilename: '[id].chunk.js'
     },

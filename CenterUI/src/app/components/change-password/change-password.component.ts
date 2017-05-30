@@ -6,8 +6,6 @@ import { ChangePasswordService } from './change-password.service';
 import { DataService} from '../../services/data.service';
 import { AppComponent }   from '../app/app.component';
 
-import "bootstrap/dist/css/bootstrap.css";
-
 @Component({
 	selector: 'trainer-change-password',
 	templateUrl: './change-password.component.view.html',

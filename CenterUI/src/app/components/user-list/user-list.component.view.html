@@ -1,0 +1,21 @@
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <h2>{{title}}</h2>
+            <div class="row">
+                    <div class="col-md-4">UserName</div>
+                    <div class="col-md-4">Role</div>
+                    <div class="col-md-4">Action</div>
+            </div>
+            <div *ngFor="let user of users">
+                <div class="row">
+                    <div class="col-md-4">{{user.Username}}</div>
+                    <div class="col-md-4">{{user.Role}}</div>
+                    <div class="col-md-4">
+                        <a *ngIf="user.IsEnable" class="btn btn-primary" (click)="blockUser(user)">Block</a>
+                        <a *ngIf="!user.IsEnable" class="btn btn-primary" (click)="enableUser(user)">Enable</a>
+                    </div>
+                </div>
+            </div>
+       </div>
+    </div>

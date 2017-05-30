@@ -7,8 +7,13 @@ import { IntroComponent }   from '../app/components/intro/intro.component';
 import { ChangePasswordComponent }   from '../app/components/change-password/change-password.component';
 import { ForgotPasswordComponent }   from '../app/components/forgot-password/forgot-password.component';
 import { ResetPasswordComponent }   from '../app/components/reset-password/reset-password.component';
+import { CreateUserComponent }   from '../app/components/create-user/create-user.component';
+import { UserListComponent }   from '../app/components/user-list/user-list.component';
 import { HttpModule, JsonpModule } from '@angular/http';
 import { RouterModule, Routes }   from '@angular/router';
+import "bootswatch/darkly/bootstrap.min.css";
+import "jquery/src/jquery.js";
+import "bootstrap/js/dropdown.js";
 
 const routes: Routes = [
   { path: '', component: AppComponent },
@@ -17,7 +22,9 @@ const routes: Routes = [
   { path: 'intro', component: IntroComponent },
   { path: 'changePassword', component: ChangePasswordComponent },
   { path: 'forgotPassword', component: ForgotPasswordComponent },
-  { path: 'resetPassword', component: ResetPasswordComponent }
+  { path: 'resetPassword', component: ResetPasswordComponent },
+  { path: 'createUser', component: CreateUserComponent },
+  { path: 'userList', component: UserListComponent }
 ];
 
 @NgModule({
@@ -29,7 +36,7 @@ const routes: Routes = [
     RouterModule.forRoot(routes)
   ],
   declarations:
-      [AppComponent, LoginComponent , IntroComponent, ChangePasswordComponent, ForgotPasswordComponent, ResetPasswordComponent],
+      [AppComponent, LoginComponent , IntroComponent, ChangePasswordComponent, ForgotPasswordComponent, ResetPasswordComponent, CreateUserComponent, UserListComponent],
   bootstrap:    [ AppComponent ]
 })
 export class AppModule { }

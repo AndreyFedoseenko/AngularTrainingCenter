@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Linq;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.ModelBinding;
@@ -19,6 +20,7 @@ using AngularTrainingCenterApi.Results;
 using System.Web.Http.Cors;
 using System.Net.Mail;
 using System.Diagnostics;
+using AngularTrainingCenterApi.Context;
 
 namespace AngularTrainingCenterApi.Controllers
 {
@@ -28,6 +30,8 @@ namespace AngularTrainingCenterApi.Controllers
     {
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
+        private RoleManager<IdentityRole> _roleManager;
+        private TrainingCenterContext context;
 
         public AccountController()
         {
@@ -49,6 +53,30 @@ namespace AngularTrainingCenterApi.Controllers
             private set
             {
                 _userManager = value;
+            }
+        }
+
+        public RoleManager<IdentityRole> RoleManager
+        {
+            get
+            {
+                return _roleManager ?? Request.GetOwinContext().GetUserManager<RoleManager<IdentityRole>>();
+            }
+            private set
+            {
+                _roleManager = value;
+            }
+        }
+
+        public TrainingCenterContext TrainingContext
+        {
+            get
+            {
+                return context ?? Request.GetOwinContext().GetUserManager<TrainingCenterContext>();
+            }
+            private set
+            {
+                context = value;
             }
         }
 
@@ -116,6 +144,56 @@ namespace AngularTrainingCenterApi.Controllers
             };
         }
 
+        // POST api/Account/GetUsers
+        [Route("GetUsers")]
+        public async Task<IHttpActionResult> GetUsers()
+        {
+            var ownerId = RoleManager.FindByName("owner").Id;
+            var users = UserManager.Users.Select(x => new ViewUserModel
+            {
+                Username = x.UserName,
+                Role = (x.Roles.FirstOrDefault().RoleId == ownerId) ? "owner" : "trainer",
+                IsEnable = !x.LockoutEnabled
+            }).ToList();
+            return Json(users);
+        }
+
+        // POST api/Account/ChangePassword
+        [Route("BlockUser")]
+        public async Task<IHttpActionResult> BlockUser(UsernameModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await UserManager.FindByNameAsync(model.Username);
+            UserManager.MaxFailedAccessAttemptsBeforeLockout = 1;
+            user.LockoutEnabled = true;
+            user.LockoutEndDateUtc = DateTime.UtcNow.AddMinutes(42);
+            user.AccessFailedCount = 2;
+
+            //user.IsEnabled = false;
+            await this.TrainingContext.SaveChangesAsync();
+            return Ok();
+        }
+
+        [Route("EnableUser")]
+        public async Task<IHttpActionResult> EnableUser(UsernameModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await UserManager.FindByNameAsync(model.Username);
+            user.LockoutEnabled = false;
+
+            //user.IsEnabled = false;
+            await this.TrainingContext.SaveChangesAsync();
+            return Ok();
+        }
+
         // POST api/Account/ChangePassword
         [Route("ChangePassword")]
         public async Task<IHttpActionResult> ChangePassword(ChangePasswordModel model)
@@ -152,10 +230,16 @@ namespace AngularTrainingCenterApi.Controllers
             {
                 return BadRequest("Please, enter correct email!");
             }
+            if (user.LockoutEnabled)
+            {
+                return BadRequest("You have been blocked.Please connect with our admin!");
+            }
 
             var code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
 
-            this.SendEmail(model.Email, code);
+            var body = string.Format("<html><head></head><body>Please, copy this code to Reset Password Code field: <b>{0}</b></body>", code);
+
+            this.SendEmail(model.Email, body);
 
             return Ok();
         }
@@ -173,44 +257,16 @@ namespace AngularTrainingCenterApi.Controllers
             {
                 return BadRequest("Please, enter correct email!");
             }
+            if (user.LockoutEnabled)
+            {
+                return BadRequest("You have been blocked.Please connect with our admin!");
+            }
             var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.NewPassword);
             if (result.Succeeded)
             {
                 return Ok();
             }
             return BadRequest("Please, enter correct email!");
-        }
-
-        private void SendEmail(string email, string code)
-        {
-            SmtpClient client = new SmtpClient();
-            client.DeliveryMethod = SmtpDeliveryMethod.Network;
-            client.EnableSsl = true;
-            client.Host = "smtp.gmail.com";
-            client.Port = 587;
-
-            // setup Smtp authentication
-            System.Net.NetworkCredential credentials =
-                new System.Net.NetworkCredential("azenkur.1992.osipovich@gmail.com", "7!Azya11");
-            client.UseDefaultCredentials = false;
-            client.Credentials = credentials;
-
-            MailMessage msg = new MailMessage();
-            msg.From = new MailAddress("azenkur.1992.osipovich@gmail.com");
-            msg.To.Add(new MailAddress(email));
-
-            msg.Subject = "Password reset";
-            msg.IsBodyHtml = true;
-            msg.Body = string.Format("<html><head></head><body>Please, copy this code to Reset Password Code field: <b>{0}</b></body>", code);
-
-            try
-            {
-                client.Send(msg);
-            }
-            catch (Exception ex)
-            {
-                Debugger.Break();
-            }
         }
 
         // POST api/Account/SetPassword
@@ -221,6 +277,16 @@ namespace AngularTrainingCenterApi.Controllers
             {
                 return BadRequest(ModelState);
             }
+
+            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+            if (user == null)
+            {
+                return BadRequest("Please, enter correct email!");
+            }
+            //if (!user.IsEnabled)
+            //{
+            //    return BadRequest("You have been blocked.Please connect with our admin!");
+            //}
 
             IdentityResult result = await UserManager.AddPasswordAsync(User.Identity.GetUserId(), model.NewPassword);
 
@@ -261,24 +327,42 @@ namespace AngularTrainingCenterApi.Controllers
             return Ok();
         }
 
+        [Route("GetRoles")]
+        public async Task<IHttpActionResult> GetRoles()
+        {
+            var roles = RoleManager.Roles.Select(x => x.Name).ToList();
+            return Json(roles);
+        }
+
         // POST api/Account/Register
         [AllowAnonymous]
-        [Route("Register")]
-        public async Task<IHttpActionResult> Register(RegisterBindingModel model)
+        [Route("CreateUser")]
+        public async Task<IHttpActionResult> CreateUser(ViewUserModel model)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var user = new ApplicationUser() { UserName = model.Email, Email = model.Email };
+            var user = new ApplicationUser() { UserName = model.Username, Email = model.Username };
 
-            IdentityResult result = await UserManager.CreateAsync(user, model.Password);
+            int passwordLength = 9;
+            int numberOfNonAlphabeticalCharacters = 3;
+
+            var password = System.Web.Security.Membership.GeneratePassword(passwordLength, numberOfNonAlphabeticalCharacters);
+
+            IdentityResult result = await UserManager.CreateAsync(user, password);
 
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
+
+            UserManager.AddToRole(user.Id, model.Role);
+
+            var body = string.Format("<html><head></head><body>Your password is: <b>{0}</b></body>", password);
+
+            this.SendEmail(user.Email, body);
 
             return Ok();
         }
@@ -373,6 +457,38 @@ namespace AngularTrainingCenterApi.Controllers
             }
 
             base.Dispose(disposing);
+        }
+
+        private void SendEmail(string email, string body)
+        {
+            SmtpClient client = new SmtpClient();
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.EnableSsl = true;
+            client.Host = "smtp.gmail.com";
+            client.Port = 587;
+
+            // setup Smtp authentication
+            System.Net.NetworkCredential credentials =
+                new System.Net.NetworkCredential("azenkur.1992.osipovich@gmail.com", "7!Azya11");
+            client.UseDefaultCredentials = false;
+            client.Credentials = credentials;
+
+            MailMessage msg = new MailMessage();
+            msg.From = new MailAddress("azenkur.1992.osipovich@gmail.com");
+            msg.To.Add(new MailAddress(email));
+
+            msg.Subject = "Password reset";
+            msg.IsBodyHtml = true;
+            msg.Body = body;
+
+            try
+            {
+                client.Send(msg);
+            }
+            catch (Exception ex)
+            {
+                Debugger.Break();
+            }
         }
 
         #region Helpers

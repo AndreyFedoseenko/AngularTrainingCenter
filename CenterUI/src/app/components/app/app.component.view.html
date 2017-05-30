@@ -1,13 +1,18 @@
-    <div class="row">
-        <div class="col-md-4"></div>
-        <div class="col-md-4"></div>
-        <div class="col-md-4">
-            <nav>
-                 <a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/login']">Login</a>
-                 <a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/forgotPassword']">Forgot Password</a>
-                 <a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/resetPassword']">Reset Password</a>
-                 <a class="btn btn-primary" *ngIf="isUserLogined()" class="mdl-navigation__link" [routerLink]="['/changePassword']">ChangePassword</a>
+    <div>
+            <nav class="navbar navbar-inverse">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <span class="navbar-brand" href="#">Trainning center</span>
+                    </div>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/login']">Login</a></li>
+                        <li><a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/forgotPassword']">Forgot Password</a></li>
+                        <li><a class="btn btn-primary" *ngIf="!isUserLogined()" class="mdl-navigation__link" [routerLink]="['/resetPassword']">Reset Password</a></li>
+                        <li><a class="btn btn-primary" *ngIf="isUserOwner()" class="mdl-navigation__link" [routerLink]="['/userList']">User List</a></li>
+                        <li><a class="btn btn-primary" *ngIf="isUserLogined()" class="mdl-navigation__link" [routerLink]="['/changePassword']">Change Password</a></li>
+                        <li><a class="btn btn-primary" *ngIf="isUserOwner()" class="mdl-navigation__link" [routerLink]="['/createUser']">Create User</a></li>
+                    </ul>
+                </div>
             </nav>
-       </div>
     </div>
     <router-outlet></router-outlet>
